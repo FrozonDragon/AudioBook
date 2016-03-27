@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>VOA</title>
+<script src="./jquery-1.12.2.min.js" type="text/javascript"></script>
+</head>
+<body>
+
+<audio id="myAudio"controls preload="none">
+
+<source  src="./resources/voa/normal/Amnesty-Condemns-Reinstatement-of-Nigerian-General-Accused-of-War-Crimes.mp3" type="audio/mpeg">
+Your browser does not support the audio element.
+</audio>
+<button type="button" id="btnPlay">Play</button>
+<div id="atc">
+
+</div>
+
+<script type="text/javascript">
+
+
+
+var timer = null;
+var iPos = 0;
+$( document ).ready(function() {
+    console.log( "ready!" );
+
+	$("#myAudio").bind("play",function(){     
+		var pos = $("#myAudio").currentTime == 0 ? 0 : iPos;
+
+		fd_play(pos);
+    });
+	$("#myAudio").bind("pause",function(){		
+		clearTimeout(timer);
+    });
+	 $.ajax({
+        type: "GET",
+        url: "./resources/voa/normal/Amnesty-Condemns-Reinstatement-of-Nigerian-General-Accused-of-War-Crimes.lrc",
+        dataType: "text",
+        success: function (data) {
+            parseLyric(data);
+			console.log( "parseLyric COMPLETE!" );
+			//alert(""+ lyrics[0]);
+			//$( "#atc" ).text( lyrics[0] );
+        }
+    });
+});
+
+
+
+
+// parsing the Lyrics from http://stackoverflow.com/questions/11510012/any-javascript-parser-for-lrc
+function parseLyric(allText) { // This will only divide with respect to new lines 
+    
+	var allTextLines = " ";
+	var line = " ";
+	var j=0;
+	var duration=0;
+	var lyrics = [];
+	var tim = [] ;
+	allTextLines = allText.split(/\r\n|\n/);	
+
+	for (i=0;i<allTextLines.length;i++){		
+		if (allTextLines[i].search(/^(\[)(\d*)(:)(.*)(\])(.*)/i)>=0 )// any line without the prescribed format wont enter this loop 
+		{
+			line = allTextLines[i].match(/^(\[)(\d*)(:)(.*)(\])(.*)/i);
+			tim[j] = (parseInt(line[2])*60)+ parseInt(line[4]); // will give seconds 
+			duration = j>0? tim[j]-tim[j-1]: 0;
+			lyrics[j]= line[6] ;//will give lyrics 
+			$( "#atc" ).append("<p id=\"TT_"+tim[j]+"\" dur=\""+duration+"\" >"+lyrics[i]+"</p>" );
+			j++;
+		}
+	} 
+} 
+
+function fd_play(iSeconds) {
+	console.log( "Duration: "+iSeconds );
+	iPos = iSeconds;
+	$( "#TT_"+iSeconds ).css( "color", "blue" );
+	var nextSentence = $( "#TT_"+iSeconds ).next("p");
+	var duration = parseInt(nextSentence.attr("dur"));
+	
+	if(duration>0){
+		timer = setTimeout( function() { fd_play(iSeconds+duration); }, duration*1000);
+	}	
+}
+</script>
+</body>
+</html>
